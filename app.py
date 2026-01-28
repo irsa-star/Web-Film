@@ -136,7 +136,7 @@ if not st.session_state.login:
     Created by<br>
     Azza Ellasari Umayro (24.83.1106)<br>
     Dina Ayu Safitri (24.83.1070)<br>
-    Nayla Rachmaddina (24.83.1099)
+    Nayla Rachmaddina (24.83.1099)<br>
     Sri Irsa Ramayani (24.83.1055)<br>
     Academic Project — Pemrograman Dasar & Python
     </div>
