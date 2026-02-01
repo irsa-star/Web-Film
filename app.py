@@ -5,61 +5,22 @@ from pathlib import Path
 # =============================
 # DATABASE
 # =============================
-DB_PATH = "film.db"
+import shutil
+import os
 
-def get_conn():
-    return sqlite3.connect(DB_PATH, check_same_thread=False)
+DB_PATH = "data/film.db"
+BACKUP_DB = "data/film_backup.db"
 
-def init_db():
-    conn = get_conn()
-    c = conn.cursor()
-    c.execute("""
-    CREATE TABLE IF NOT EXISTS film_stats (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        film_id INTEGER,
-        username TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(film_id, username)
-    )
-""")
+def restore_db():
+    if not os.path.exists(DB_PATH):
+        if os.path.exists(BACKUP_DB):
+            shutil.copy(BACKUP_DB, DB_PATH)
+            print("Database dipulihkan dari backup")
+        else:
+            print("Backup database tidak ditemukan")
 
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS film (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            judul TEXT,
-            genre TEXT,
-            sinopsis TEXT,
-            tahun INTEGER,
-            rating REAL,
-            durasi TEXT,
-            durasi_episode TEXT,
-            umur TEXT,
-            poster TEXT
-        )
-    """)
+restore_db()
 
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS user_watchlist (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT,
-            film_id INTEGER
-        )
-    """)
-
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS user (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password TEXT,
-            role TEXT
-        )
-    """)
-
-    c.execute("INSERT OR IGNORE INTO user VALUES (NULL,'admin','admin123','admin')")
-    c.execute("INSERT OR IGNORE INTO user VALUES (NULL,'user','user123','user')")
-
-    conn.commit()
-    conn.close()
 
 init_db()
 
