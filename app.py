@@ -11,6 +11,60 @@ import os
 DB_PATH = "data/film.db"
 BACKUP_DB = "data/film_backup.db"
 
+def get_conn():
+    return sqlite3.connect(DB_PATH, check_same_thread=False)
+
+def init_db():
+    conn = get_conn()
+    c = conn.cursor()
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS film_stats (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        film_id INTEGER,
+        username TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(film_id, username)
+    )
+""")
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS film (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            judul TEXT,
+            genre TEXT,
+            sinopsis TEXT,
+            tahun INTEGER,
+            rating REAL,
+            durasi TEXT,
+            durasi_episode TEXT,
+            umur TEXT,
+            poster TEXT
+        )
+    """)
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS user_watchlist (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT,
+            film_id INTEGER
+        )
+    """)
+
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS user (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            username TEXT UNIQUE,
+            password TEXT,
+            role TEXT
+        )
+    """)
+
+    c.execute("INSERT OR IGNORE INTO user VALUES (NULL,'admin','admin123','admin')")
+    c.execute("INSERT OR IGNORE INTO user VALUES (NULL,'user','user123','user')")
+
+    conn.commit()
+    conn.close()
+
 def restore_db():
     if not os.path.exists(DB_PATH):
         if os.path.exists(BACKUP_DB):
@@ -23,6 +77,88 @@ restore_db()
 
 
 init_db()
+
+def ensure_data_exists():
+    conn = get_conn()
+    c = conn.cursor()
+
+    c.execute("SELECT COUNT(*) FROM film")
+    count = c.fetchone()[0]
+
+    if count == 0:
+
+        Path("poster").mkdir(exist_ok=True)
+
+        data = [
+
+            (
+                "Check the Store Next Door",
+                "Comedy",
+                "Setelah Erwin menerima tawaran untuk bekerja di Singapura, ayahnya jatuh sakit dan membutuhkannya untuk bekerja di tokonya. Tetapi kakak laki-lakinya yang lebih tua dan tidak bertanggung jawab Yohan merasa bahwa ayahnya lebih menyukai Erwin daripada dia.",
+                2016, 7.8,
+                "1 jam 38 menit",
+                None,
+                "15+",
+                "poster/ctsnd.jpg"
+            ),
+
+            (
+                "KKN di Desa Penari",
+                "Horor",
+                "Ketika sekelompok siswa mengunjungi sebuah desa untuk pelayanan masyarakat, proyek mereka berubah menjadi mematikan. Mereka bertemu dengan roh seorang penari yang murka, yang melepaskan serangkaian kengerian yang menakutkan kepada mereka.",
+                2022, 5.9,
+                "2 jam 1 menit",
+                None,
+                "18+",
+                "poster/kkn.jpg"
+            ),
+
+            (
+                "Falling Into Your Smile",
+                "Romance",
+                "Tong Yao mendapatkan tempat sebagai pemain wanita pertama di tim ZGDX yang semuanya pria dan semakin dekat dengan pemimpin tim.",
+                2016, 8.4,
+                None,
+                "31",
+                "18+",
+                "poster/FIYS.jpg"
+            ),
+
+            (
+                "Norma: Antara Mertua dan Menantu",
+                "Drama",
+                "Drama yang diangkat dari kisah nyata viral, mengisahkan keretakan rumah tangga Norma akibat perselingkuhan suaminya, Irfan, dengan ibu kandung Norma, Rina.",
+                2025, 5.7,
+                "2 jam 14 menit",
+                None,
+                "18+",
+                "poster/norma.jpg"
+            ),
+
+            (
+                "Ballerina",
+                "Action",
+                "Berduka atas kehilangan sahabat yang tidak bisa dia lindungi, mantan pengawal Ok-ju berangkat untuk memenuhi keinginan terakhir sahabatnya: balas dendam yang manis.",
+                2016, 6.3,
+                "1 jam 33 menit",
+                None,
+                "18+",
+                "poster/balerina.jpg"
+            ),
+        ]
+
+        c.executemany("""
+            INSERT INTO film
+            (judul, genre, sinopsis, tahun, rating, durasi, durasi_episode, umur, poster)
+            VALUES (?,?,?,?,?,?,?,?,?)
+        """, data)
+
+        conn.commit()
+
+    conn.close()
+
+ensure_data_exists()
+
 
 # =============================
 # CONFIG
@@ -256,6 +392,9 @@ elif menu=="➕ Tambah Film":
             VALUES (?,?,?,?,?,?,?,?,?)
         """,(judul,genre,sinopsis,tahun,rating,durasi,durasi_episode,umur,poster_path))
         conn.commit(); conn.close()
+
+        backup_db() 
+
         st.success("Film berhasil ditambahkan")
 
 # =============================
