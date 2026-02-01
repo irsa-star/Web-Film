@@ -393,8 +393,6 @@ elif menu=="➕ Tambah Film":
         """,(judul,genre,sinopsis,tahun,rating,durasi,durasi_episode,umur,poster_path))
         conn.commit(); conn.close()
 
-        backup_db() 
-
         st.success("Film berhasil ditambahkan")
 
 # =============================
